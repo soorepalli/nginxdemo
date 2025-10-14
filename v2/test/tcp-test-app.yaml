@@ -4,7 +4,6 @@ kind: Namespace
 metadata:
   name: tcp-test
 ---
-# 1️⃣ TCP Echo Server Deployment (for testing TCP passthrough)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -22,14 +21,10 @@ spec:
     spec:
       containers:
         - name: tcp-echo
-          # This image runs a simple TCP echo server on port 9000
-          image: hashicorp/tcp-echo:0.2.0
-          args:
-            - "-text=Hello from TCP App via NGINX Ingress!"
+          image: ghcr.io/jmalloc/echo-server:latest
           ports:
             - containerPort: 9000
 ---
-# 2️⃣ Service for TCP Echo App
 apiVersion: v1
 kind: Service
 metadata:
@@ -43,9 +38,6 @@ spec:
       port: 9000
       targetPort: 9000
 ---
-# 3️⃣ (Ingress Controller ConfigMap Mapping)
-# You must map the external port 9000 on NGINX/NLB to this TCP app
-# This should go in the ingress-nginx namespace, not tcp-test.
 apiVersion: v1
 kind: ConfigMap
 metadata:
