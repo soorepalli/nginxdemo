@@ -1,0 +1,26 @@
+[
+  {
+    "ParameterKey": "ClusterName",
+    "ParameterValue": "eks-postgres-demo"
+  },
+  {
+    "ParameterKey": "VpcId",
+    "ParameterValue": "vpc-0b39c83e901dfcfd9"
+  },
+  {
+    "ParameterKey": "SubnetIds",
+    "ParameterValue": "subnet-02ad584eceb292845,subnet-0a98d6c6a2d72d7ca"
+  },
+  {
+    "ParameterKey": "NodeInstanceType",
+    "ParameterValue": "t3.medium"
+  },
+  {
+    "ParameterKey": "DesiredCapacity",
+    "ParameterValue": "2"
+  },
+  {
+    "ParameterKey": "KeyName",
+    "ParameterValue": "SRR-Demo"
+  }
+]
