@@ -91,4 +91,36 @@ kubectl get configmap tcp-services -n ingress-nginx -o yaml
 kubectl get deploy ingress-nginx-controller -n ingress-nginx -o yaml | grep 7687
 kubectl get svc ingress-nginx-controller -n ingress-nginx -o yaml | grep 7687
 
+================================
 
+Add Tags for Internal NLB (Private Subnets)
+
+aws ec2 create-tags --resources <SUBNET_ID_1> <SUBNET_ID_2> \
+  --tags Key=kubernetes.io/cluster/<CLUSTER_NAME>,Value=owned \
+         Key=kubernetes.io/role/internal-elb,Value=1
+
+🧾 4. Verify Service After Fix
+After adding the subnet tags, delete and recreate the Service (or just let the controller retry):
+
+kubectl delete svc ingress-nginx-controller -n ingress-nginx
+kubectl apply -f ingress-nginx-service.yaml
+
+kubectl get svc -n ingress-nginx
+
+NAME                      TYPE           CLUSTER-IP      EXTERNAL-IP
+ingress-nginx-controller  LoadBalancer   10.x.x.x        internal-xxxx-NLB-xxxx.elb.amazonaws.com
+==================
+5. Optional: Restrict Subnets Manually (Annotation Method)
+
+kubectl patch service ingress-nginx-controller -n ingress-nginx \
+  --type merge \
+  -p '{
+    "metadata": {
+      "annotations": {
+        "service.beta.kubernetes.io/aws-load-balancer-type": "nlb",
+        "service.beta.kubernetes.io/aws-load-balancer-internal": "true",
+        "service.beta.kubernetes.io/aws-load-balancer-subnets": "subnet-abc123,subnet-def456",
+        "service.beta.kubernetes.io/aws-load-balancer-security-groups": "<YOUR_NLB_SG_ID>"
+      }
+    }
+  }'
