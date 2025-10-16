@@ -80,5 +80,15 @@ kubectl patch service ingress-nginx-controller -n ingress-nginx \
     }
   }'
 
+======================
+Verification
+
+kubectl get svc ingress-nginx-controller -n ingress-nginx -o wide
+kubectl describe svc ingress-nginx-controller -n ingress-nginx | grep "LoadBalancer"
+
+
+kubectl get configmap tcp-services -n ingress-nginx -o yaml
+kubectl get deploy ingress-nginx-controller -n ingress-nginx -o yaml | grep 7687
+kubectl get svc ingress-nginx-controller -n ingress-nginx -o yaml | grep 7687
 
 
