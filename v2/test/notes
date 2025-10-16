@@ -124,3 +124,50 @@ kubectl patch service ingress-nginx-controller -n ingress-nginx \
       }
     }
   }'
+=======================<>===========================
+kubectl patch svc ingress-nginx-controller -n ingress-nginx --type='json' -p='[
+  {
+    "op": "add",
+    "path": "/spec/ports/-",
+    "value": {"name":"postgres-tcp","port":5432,"targetPort":5432}
+  },
+  {
+    "op": "add",
+    "path": "/spec/ports/-",
+    "value": {"name":"custom-tcp","port":7683,"targetPort":7683}
+  }
+]'
+
+# code
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tcp-services
+  namespace: ingress-nginx
+data:
+  "5432": "default/postgres-service:5432"
+  "7683": "default/other-service:7683"  # Replace 'other-service' with your actual service name
+
+# patch for code
+Option A — one-line kubectl patch (fast, idempotent)
+
+kubectl patch configmap tcp-services -n ingress-nginx --type=merge -p '{
+  "data": {
+    "5432": "default/postgres-service:5432",
+    "7683": "default/other-service:7683"
+  }
+}'
+
+
+Option B — apply a small YAML (creates or replaces)
+
+Save this to tcp-services-patch.yaml:
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tcp-services
+  namespace: ingress-nginx
+data:
+  "5432": "default/postgres-service:5432"
+  "7683": "default/other-service:7683"
