@@ -31,3 +31,54 @@ kubectl logs -n ingress-nginx -l app.kubernetes.io/component=controller
 
 
 aws elbv2 describe-target-health --target-group-arn <TARGET_GROUP_ARN>
+
+
+=================================================================================
+⚙️ Step 1: Create or Update the tcp-services ConfigMap
+If you don’t already have one, create it:
+
+kubectl -n ingress-nginx create configmap tcp-services \
+  --from-literal="7687=default/postgres:5432"
+
+Or if it already exists, patch it:
+
+kubectl patch configmap tcp-services -n ingress-nginx \
+  --type merge \
+  -p '{"data":{"7687":"default/postgres:5432"}}'
+
+⚙️ Step 2: Patch the Ingress-NGINX Deployment
+Make sure the controller has the TCP config enabled and exposes port 7687.
+
+kubectl patch deployment ingress-nginx-controller -n ingress-nginx \
+  --type='json' \
+  -p='[
+    {"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--tcp-services-configmap=$(POD_NAMESPACE)/tcp-services"},
+    {"op":"add","path":"/spec/template/spec/containers/0/ports/-","value":{"name":"tcp-7687","containerPort":7687}}
+  ]'
+
+⚙️ Step 3: Patch the Service (Expose Port 7687 on NLB)
+
+kubectl patch service ingress-nginx-controller -n ingress-nginx \
+  --type='json' \
+  -p='[
+    {"op":"add","path":"/spec/ports/-","value":{"name":"tcp-7687","port":7687,"targetPort":"tcp-7687","protocol":"TCP"}}
+  ]'
+
+If your service already has annotations for NLB (like aws-load-balancer-type), you don’t need to modify them.
+=============================
+🛠️ Patch command
+
+kubectl patch service ingress-nginx-controller -n ingress-nginx \
+  --type merge \
+  -p '{
+    "metadata": {
+      "annotations": {
+        "service.beta.kubernetes.io/aws-load-balancer-type": "nlb",
+        "service.beta.kubernetes.io/aws-load-balancer-internal": "true",
+        "service.beta.kubernetes.io/aws-load-balancer-security-groups": "<YOUR_NLB_SG_ID>"
+      }
+    }
+  }'
+
+
+
