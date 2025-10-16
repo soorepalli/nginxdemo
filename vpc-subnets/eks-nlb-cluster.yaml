@@ -91,7 +91,8 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Type: network
-      Scheme: internet-facing
+      # Scheme: internet-facing
+      Scheme: internal
       Subnets: !Ref SubnetIds
       Tags:
         - Key: Name
@@ -116,6 +117,24 @@ Resources:
       LoadBalancerArn: !Ref NLB
       Port: 7687
       Protocol: TCP
+  
+  NLBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for internal NLB access
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 7687
+          ToPort: 7687
+          CidrIp: 10.0.0.0/8        # Restrict to internal VPC CIDR (adjust for your org)
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub "${ClusterName}-nlb-sg"
+
 
 Outputs:
 
