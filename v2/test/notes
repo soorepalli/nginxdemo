@@ -171,3 +171,7 @@ metadata:
 data:
   "5432": "default/postgres-service:5432"
   "7683": "default/other-service:7683"
+
+=======================x================x====================
+NLB_DNS=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+psql -h $NLB_DNS -U admin -d appdb -p 5432
